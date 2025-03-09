@@ -2,24 +2,33 @@
 
 using System.Numerics;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 
 public static class lab2
 {
     public static void Main()
     {
+        Console.Write("N = ");
         UInt16 N = Convert.ToUInt16(Console.ReadLine());
+        Console.Write("\nM = ");
         UInt16 M = Convert.ToUInt16(Console.ReadLine());
+        Console.Write("\nt1 = ");
         UInt16 T1 = Convert.ToUInt16(Console.ReadLine());
+        Console.Write("\nt2 = ");
         UInt16 T2 = Convert.ToUInt16(Console.ReadLine());
-        
+        Console.Write("\nБарьер по максимуму - 1, Барьер по минимумам - 0");
+        int barier_type = Convert.ToInt32(Console.ReadLine());
+
+
         var test = new Matrix(N, M, T1, T2);
         test.createMatrix();
-        test.PrintMatrix();
+        test.BarrierNum(barier_type);
+        test.PrintMatrix(barier_type);
 
-        Console.WriteLine("Введите 0, если хотите сортировку по возрастанию, 1 - по убыванию, или что иное, чтоб оставить матрицу исходной");
+        Console.Write("\nВведите 0, если хотите сортировку по возрастанию, 1 - по убыванию, или что иное, чтоб оставить матрицу исходной");
         int desc = Convert.ToUInt16(Console.ReadLine());
         test.SortMatrix(desc);
-        test.PrintMatrix();
+        test.PrintMatrix(barier_type);
 
         var task = new MainTask(test);
         task.Main();
@@ -34,6 +43,8 @@ public class Matrix
     public UInt16 T1 { get; set; }
     public UInt16 T2 { get; set; }
     public List<List<int>> matrix { get; set; }
+
+    public int barrier;
 
     public Matrix(UInt16 n, UInt16 m, UInt16 t1 = 10, UInt16 t2 = 25)
     {
@@ -58,25 +69,51 @@ public class Matrix
         }
     }
 
-    public int BarrierNum()
+    public void BarrierNum(int max_min)
     {
         int barr_val = 0;
-        foreach (var el in matrix)
+        if (max_min == 0)
         {
-            barr_val += el.Sum();
+            Console.WriteLine("Барьер расчитывается по минимумам.");
+            foreach (var el in matrix)
+            {
+                barr_val += el.Min();
+            }
         }
-        return (int)Math.Ceiling((double)barr_val / N);
+        else
+        {
+            Console.WriteLine("Барьер расчитывается по максимумам.");
+            foreach (var el in matrix)
+            {
+                barr_val += el.Max();
+            }
+        }
+            barrier = (int)Math.Ceiling((double)barr_val / N);
     }
 
-    public void PrintMatrix()
+    public void PrintMatrix(int max_min)
     {
-        foreach(var el in matrix)
+        if (max_min == 0)
         {
-            string answer = string.Join(" ", el);
-            answer += "  T= " + el.Sum().ToString();
-            Console.WriteLine(answer);
+            foreach (var el in matrix)
+            {
+                string answer = string.Join(" ", el);
+                answer += " T= " + el.Sum().ToString();
+                answer += " Min= " + el.Min().ToString();
+                Console.WriteLine(answer);
+            }
         }
-        Console.WriteLine("Значение барьера = " + BarrierNum().ToString());
+        else
+        {
+            foreach (var el in matrix)
+            {
+                string answer = string.Join(" ", el);
+                answer += " T= " + el.Sum().ToString();
+                answer += " Max= " + el.Min().ToString();
+                Console.WriteLine(answer);
+            }
+        }
+            Console.WriteLine("Значение барьера = " + barrier);
         Console.WriteLine();
     }
 
@@ -113,25 +150,35 @@ public class MainTask {
         {
             tasks[i] = 0;
         }
-        barier_num = mat.BarrierNum();
+        barier_num = mat.barrier;
     }
 
     public void Main()
     {
         foreach(var el in matrix)
         {
-            //Короче надо добавить условие, до барьера, а до него ебашить как во второй лабе, а дальше как сказал карен
-            List<int> tmp = new List<int>();
-            for (int j = 0; j < N; j++)
-            {
-                tmp.Add(el[j] + tasks[j]);
+            int[] tmp_task = tasks.ToArray();
+            var index_min_before = el.IndexOf(el.Min());
+            tmp_task[index_min_before] += el.Min();
+            if (tmp_task.Max() <= barier_num) {
+                Console.WriteLine("Минимальный элемент: " + el.Min());
+                Console.WriteLine("P = {" + String.Join(",", tmp_task) + "}");
+                tasks = tmp_task.ToArray();
             }
-            Console.WriteLine("Строка памяти: " + string.Join(",", tmp));
-            var indexmin = tmp.IndexOf(tmp.Min());
-            Console.WriteLine("Минимальный элемент: " + el.Min() + " + " +tasks[indexmin]);
-            tasks[indexmin] += el.Min();
-            
-            Console.WriteLine("P = {" + String.Join(",", tasks) + "}");
+            else
+            {
+                Console.WriteLine("Действия после барьера");
+                List<int> tmp = new List<int>();
+                for (int j = 0; j < N; j++)
+                {
+                    tmp.Add(el[j] + tasks[j]);
+                }
+                Console.WriteLine("Строка памяти: " + string.Join(",", tmp));
+                var indexmin = tmp.IndexOf(tmp.Min());
+                Console.WriteLine("Удовлетворительный элемент: " + el[indexmin] + " + " + tasks[indexmin]);
+                tasks[indexmin] += el[indexmin];
+                Console.WriteLine("P = {" + String.Join(",", tasks) + "}");
+            }
         }
 
         Findmax();
