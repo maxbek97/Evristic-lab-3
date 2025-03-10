@@ -16,7 +16,7 @@ public static class lab2
         UInt16 T1 = Convert.ToUInt16(Console.ReadLine());
         Console.Write("\nt2 = ");
         UInt16 T2 = Convert.ToUInt16(Console.ReadLine());
-        Console.Write("\nБарьер по максимуму - 1, Барьер по минимумам - 0");
+        Console.Write("\nБарьер по максимуму - 1, Барьер по минимумам - 0 = ");
         int barier_type = Convert.ToInt32(Console.ReadLine());
 
 
@@ -25,7 +25,7 @@ public static class lab2
         test.BarrierNum(barier_type);
         test.PrintMatrix(barier_type);
 
-        Console.Write("\nВведите 0, если хотите сортировку по возрастанию, 1 - по убыванию, или что иное, чтоб оставить матрицу исходной");
+        Console.Write("\nВведите 0, если хотите сортировку по возрастанию, 1 - по убыванию, или что иное, чтоб оставить матрицу исходной = ");
         int desc = Convert.ToUInt16(Console.ReadLine());
         test.SortMatrix(desc);
         test.PrintMatrix(barier_type);
@@ -168,13 +168,19 @@ public class MainTask {
             else
             {
                 Console.WriteLine("Действия после барьера");
-                List<int> tmp = new List<int>();
+                int tmp_min = el[0] + tasks[0];
+                int indexmin = 0;
+                string answer = "";
                 for (int j = 0; j < N; j++)
                 {
-                    tmp.Add(el[j] + tasks[j]);
+                    answer += el[j] + tasks[j] + ",";
+                    if (tmp_min > (el[j] + tasks[j]))
+                    {
+                        tmp_min = el[j] + tasks[j];
+                        indexmin = j;
+                    }
                 }
-                Console.WriteLine("Строка памяти: " + string.Join(",", tmp));
-                var indexmin = tmp.IndexOf(tmp.Min());
+                Console.WriteLine("Строка памяти: " + answer.Remove(answer.Length - 1));
                 Console.WriteLine("Удовлетворительный элемент: " + el[indexmin] + " + " + tasks[indexmin]);
                 tasks[indexmin] += el[indexmin];
                 Console.WriteLine("P = {" + String.Join(",", tasks) + "}");
